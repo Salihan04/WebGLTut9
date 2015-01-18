@@ -72,13 +72,9 @@
 	var lastTime = 0;
 	var texture;
 	var xRot = 0;
-	var xSpeed = 3;
-  	var yRot = 0;
-  	var ySpeed = -3;
+	var xSpeed = 0;
   	var z = -5.0;
-  	var filter = 0;						//range from 0 to 2 to represent the 3 filters used on texture
   	var currentlyPressedKeys = {};
-  	var lighting;
 
 	function initGL(canvas) {
 		try{
@@ -93,21 +89,25 @@
 	}
 
 	function getShader(gl, id) {
-		var shaderScript = document.getElementById(id);
-		if(!shaderScript)
-			return null;
+		var shaderScript, theSource, currentChild, shader;
+  
+		shaderScript = document.getElementById(id);
 
-		var str = "";
-		var k = shaderScript.firstChild;
-
-		while(k) {
-			if(k.nodeType == 3)
-				str += k.textContent;
-
-			k = k.nextSibling;
+		if (!shaderScript) {
+		return null;
 		}
 
-		var shader;
+		theSource = "";
+		currentChild = shaderScript.firstChild;
+
+		while(currentChild) {
+			if (currentChild.nodeType == currentChild.TEXT_NODE) {
+			  theSource += currentChild.textContent;
+			}
+
+			currentChild = currentChild.nextSibling;
+		}
+
 		if(shaderScript.type == "x-shader/x-fragment")
 			shader = gl.createShader(gl.FRAGMENT_SHADER);
 		else if(shaderScript.type == "x-shader/x-vertex")
@@ -115,7 +115,7 @@
 		else
 			return null;
 
-		gl.shaderSource(shader, str);
+		gl.shaderSource(shader, theSource);
 		gl.compileShader(shader);
 
 		if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
@@ -185,14 +185,6 @@
  		//"Down" key
  		if(currentlyPressedKeys[40])
  			xSpeed += 1;
-
- 		//"Left" key
- 		if(currentlyPressedKeys[37])
- 			ySpeed -= 1;
-
- 		//"Right" key
- 		if(currentlyPressedKeys[39])
- 			ySpeed += 1;
  	}
 
     function degToRad(degrees) {
@@ -395,7 +387,6 @@
 		mat4.translate(mvMatrix, [0.0, 0.0, z]);
 
 		mat4.rotate(mvMatrix, degToRad(xRot), [1, 0, 0]);
-		mat4.rotate(mvMatrix, degToRad(yRot), [0, 1, 0]);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
 		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -418,7 +409,7 @@
 	      gl.enable(gl.DEPTH_TEST);
 	    }
 
-		lighting = document.getElementById("lighting").checked;
+		var lighting = document.getElementById("lighting").checked;
         gl.uniform1i(shaderProgram.useLightingUniform, lighting);
         if (lighting) {
             gl.uniform3f(
@@ -458,7 +449,6 @@
 			var elapsed = timeNow - lastTime;
 
 			xRot += (xSpeed * elapsed) / 1000.0;
-            yRot += (ySpeed * elapsed) / 1000.0;
 		}
 		lastTime = timeNow;
 	}
@@ -513,7 +503,7 @@
 			<b><u>Controls</u></b>
 		    <ul>
 		        <li><code>W</code>/<code>S</code> to zoom out/in
-		        <li>Cursor keys: make the cube rotate (the longer you hold down a cursor key, the more it accelerates)
+		        <li><code>Up</code>/<code>Down</code> keys to rotate
 		    </ul>
 		</article></br>
 
